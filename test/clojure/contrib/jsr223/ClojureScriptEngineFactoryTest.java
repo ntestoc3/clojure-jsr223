@@ -76,7 +76,7 @@ public class ClojureScriptEngineFactoryTest {
 	public void getEngineVersion() {
 		ClojureScriptEngineFactory f = new ClojureScriptEngineFactory();
 		String name = f.getEngineVersion();
-		Assert.assertEquals("1.5.1", name);
+		Assert.assertEquals("1.7.0", name);
 	}
 	
 	@Test
@@ -98,7 +98,7 @@ public class ClojureScriptEngineFactoryTest {
 	public void getLanguageVersion() {
 		ClojureScriptEngineFactory f = new ClojureScriptEngineFactory();
 		String name = f.getLanguageVersion();
-		Assert.assertEquals("1.5.1", name);
+		Assert.assertEquals("1.7.0", name);
 	}
 	
 	@Test
