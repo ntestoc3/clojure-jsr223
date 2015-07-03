@@ -5,7 +5,7 @@
 
 	<groupId>org.clojars.xafero</groupId>
 	<artifactId>clojure-jsr223</artifactId>
-	<version>1.7.0</version>
+	<version>1.7.0.2</version>
 
 	<name>clojure-jsr223</name>
 	<description>Fork of clojure-jsr223 which loads the Clojure runtime only on demand.</description>
@@ -16,6 +16,20 @@
 		<maven.compiler.source>1.6</maven.compiler.source>
 		<maven.compiler.target>1.6</maven.compiler.target>
 	</properties>
+
+	<licenses>
+		<license>
+			<name>EPL 1.0</name>
+			<url>http://opensource.org/licenses/eclipse-1.0.php</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/xafero/clojure-jsr223</url>
+		<connection>scm:git:git://github.com/xafero/clojure-jsr223.git</connection>
+		<developerConnection>scm:git:git@github.com:xafero/clojure-jsr223.git</developerConnection>
+	</scm>
 
 	<build>
 		<sourceDirectory>${basedir}/src</sourceDirectory>
@@ -42,16 +56,11 @@
 		</dependency>
 	</dependencies>
 
-	<profiles>
-		<profile>
+	<distributionManagement>
+		<repository>
 			<id>clojars</id>
-			<distributionManagement>
-				<repository>
-					<id>clojars</id>
-					<name>Clojars repository</name>
-					<url>https://clojars.org/repo</url>
-				</repository>
-			</distributionManagement>
-		</profile>
-	</profiles>
+			<name>Clojars repository</name>
+			<url>https://clojars.org/repo</url>
+		</repository>
+	</distributionManagement>
 </project>
