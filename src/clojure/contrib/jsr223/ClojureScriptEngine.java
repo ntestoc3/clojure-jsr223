@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.script.AbstractScriptEngine;
@@ -46,17 +47,21 @@ import clojure.lang.Var;
  * @version 1.2
  */
 class ClojureScriptEngine 
-	extends AbstractScriptEngine 
-	implements Invocable, Compilable {
+    extends AbstractScriptEngine 
+          // disable compile
+    implements Invocable //, Compilable
+{
 
-	private static final Symbol    USER_SYM            = Symbol.create("user");
-	private static final Var       IN_NS               = RT.var("clojure.core", "in-ns");
-	private static final String    SOURCE_PATH_KEY     = "clojure.source.path";
-	private static final String    COMPILE_PATH_KEY    = "clojure.compile.path";
-	private static final String    WARN_REFLECTION_KEY = "clojure.compile.warn-on-reflection";
-	private static final String    CLASSPATH           = System.getProperty("java.class.path");
+    private static final Symbol    USER_SYM            = Symbol.create("user");
+    private static final Var       IN_NS               = RT.var("clojure.core", "in-ns");
+    private static final Var REFER = RT.var("clojure.core", "refer");
+    private static final Symbol CORE_NS = Symbol.create("clojure.core");
+    private static final String    SOURCE_PATH_KEY     = "clojure.source.path";
+    private static final String    COMPILE_PATH_KEY    = "clojure.compile.path";
+    private static final String    WARN_REFLECTION_KEY = "clojure.compile.warn-on-reflection";
+    private static final String    CLASSPATH           = System.getProperty("java.class.path");
 
-	private final ScriptEngineFactory factory;
+    private final ScriptEngineFactory factory;
 	
 	/**
 	 * Default Constructor.
@@ -199,10 +204,11 @@ class ClojureScriptEngine
 					   RT.ERR, context.getErrorWriter()));
 			
 			IN_NS.invoke(USER_SYM);
+      REFER.invoke(CORE_NS);
 			result = Compiler.load(reader);
 
-            if (globalScope != null)
-                collectBindings(engineScope);            
+      if (globalScope != null)
+          collectBindings(engineScope);            
 		} catch (Exception e) {
 			throw new ScriptException(e);
 		} finally {
@@ -343,8 +349,8 @@ class ClojureScriptEngine
 				result = var.applyTo(RT.seq(args));
 			}
 			
-            if (globalScope != null)
-                collectBindings(engineScope);            
+      if (globalScope != null)
+          collectBindings(engineScope);            
 		} catch (Exception e) {
 			throw new ScriptException(e);
 		} finally {
@@ -402,29 +408,35 @@ class ClojureScriptEngine
 			return null;
 		
 		try {
-			/*
-			 * Each compilation takes place in its own process with a clean
-			 * slate in the Clojure RT. No bindings nor redirections are
-			 * applied from the host Java code.
+        /*
+         * Each compilation takes place in its own process with a clean
+         * slate in the Clojure RT. No bindings nor redirections are
+         * applied from the host Java code.
 			 */
-			StringBuffer classpath = new StringBuffer(CLASSPATH);
-			String cmp = (String) get(COMPILE_PATH_KEY);
-			if (cmp != null && cmp.length() > 0)
-				classpath.append(File.pathSeparatorChar).append(cmp);
-			String src = (String) get(SOURCE_PATH_KEY);
-			if (src != null && src.length() > 0)
-				classpath.append(File.pathSeparatorChar).append(src);
+        StringBuffer classpath = new StringBuffer(CLASSPATH);
+        String cljpath = new File(Compiler.class.getProtectionDomain()
+                                  .getCodeSource()
+                                  .getLocation()
+                                  .toURI())
+            .getPath();
+        classpath.append(File.pathSeparatorChar).append(cljpath);
+        String cmp = (String) get(COMPILE_PATH_KEY);
+        if (cmp != null && cmp.length() > 0)
+            classpath.append(File.pathSeparatorChar).append(cmp);
+        String src = (String) get(SOURCE_PATH_KEY);
+        if (src != null && src.length() > 0)
+            classpath.append(File.pathSeparatorChar).append(src);
 			
-	    	String compile = 
-	    		String.format("java -D%s=%s -D%s=%b -cp %s clojure.lang.Compile %s",
-	    		    COMPILE_PATH_KEY, 
-	    			(String) get(COMPILE_PATH_KEY),
-	    		    WARN_REFLECTION_KEY, 
-	    		    (Boolean) get(WARN_REFLECTION_KEY),
-	    		    classpath.toString(),
-	    		    library);
+        String compile = 
+            String.format("java -D%s=%s -D%s=%b -cp %s clojure.lang.Compile %s",
+                          COMPILE_PATH_KEY, 
+                          (String) get(COMPILE_PATH_KEY),
+                          WARN_REFLECTION_KEY, 
+                          (Boolean) get(WARN_REFLECTION_KEY),
+                          classpath.toString(),
+                          library);
 	    	
-			Process process = Runtime.getRuntime().exec(compile);
+        Process process = Runtime.getRuntime().exec(compile);
 
 			BufferedReader reader = 
 				new BufferedReader(
@@ -436,14 +448,16 @@ class ClojureScriptEngine
             	line = reader.readLine();
             }
             reader.close();
-            
-	    	process.waitFor();
+
+            process.waitFor();
 	    	if (process.exitValue() != 0)
-	    		throw new ScriptException(buffer.toString());
+            throw new ScriptException(buffer.toString());
 		} catch (IOException e) {
-			throw new ScriptException(e);
-		} catch (InterruptedException e) {
-			throw new ScriptException(e);
+        throw new ScriptException(e);
+		} catch (URISyntaxException e) {
+        throw new ScriptException(e);
+    } catch (InterruptedException e) {
+        throw new ScriptException(e);
 		}
 
 		return null;

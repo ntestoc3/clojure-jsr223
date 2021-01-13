@@ -23,15 +23,12 @@ import java.util.Properties;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
-import org.kohsuke.MetaInfServices;
-
 /**
  * Implementation of a {@code ScriptEngineFactory} for Clojure.
  * 
  * @author Armando Blancas
  * @version 1.2
  */
-@MetaInfServices(ScriptEngineFactory.class)
 public class ClojureScriptEngineFactory
         implements ScriptEngineFactory {
 
